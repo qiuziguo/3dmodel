@@ -3,54 +3,48 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>关公像 AR - 全平台兼容</title>
-    
-    <!-- Model Viewer for fallback -->
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <title>关公像 真实 AR 体验</title>
     
     <style>
         body {
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            overflow-x: hidden;
+            line-height: 1.6;
         }
         
-        .header {
-            text-align: center;
-            padding: 20px;
-            background: rgba(0,0,0,0.2);
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            color: #FFD700;
-        }
-        
-        .ios-ar-section {
-            padding: 20px;
-            text-align: center;
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
             background: rgba(255,255,255,0.1);
-            margin: 20px;
-            border-radius: 15px;
+            border-radius: 20px;
+            padding: 25px;
             backdrop-filter: blur(10px);
         }
         
+        .title {
+            text-align: center;
+            font-size: 24px;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+        
         .ar-button {
-            display: inline-block;
+            display: block;
+            width: 100%;
             background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
             color: white;
             text-decoration: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            padding: 18px;
+            border-radius: 15px;
             font-size: 18px;
             font-weight: bold;
+            text-align: center;
             box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
             transition: all 0.3s ease;
-            margin: 10px;
+            margin: 20px 0;
         }
         
         .ar-button:hover {
@@ -58,110 +52,175 @@
             box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
         }
         
-        .fallback-section {
-            margin-top: 20px;
-        }
-        
-        model-viewer {
-            width: 100%;
-            height: 400px;
-            background-color: transparent;
-            --poster-color: transparent;
-        }
-        
-        .platform-info {
+        .steps {
             background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
             border-radius: 10px;
+        }
+        
+        .step-number {
+            background: #FFD700;
+            color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 5px;
+        }
+        
+        .requirements {
+            background: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #FFD700;
             padding: 15px;
-            margin: 15px;
-            font-size: 14px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
         }
         
-        .ios-only {
-            display: none;
+        .troubleshoot {
+            background: rgba(255, 107, 107, 0.2);
+            border-left: 4px solid #FF6B6B;
+            padding: 15px;
+            border-radius: 0 10px 10px 0;
+            margin: 20px 0;
         }
         
-        .non-ios {
-            display: block;
+        .status {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: bold;
         }
         
-        @media (max-width: 768px) {
-            .header h1 {
-                font-size: 20px;
-            }
-            
-            model-viewer {
-                height: 350px;
-            }
+        .status.supported {
+            background: rgba(76, 175, 80, 0.3);
+            border: 2px solid #4CAF50;
+        }
+        
+        .status.not-supported {
+            background: rgba(244, 67, 54, 0.3);
+            border: 2px solid #F44336;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🏮 关公像 AR 体验</h1>
-        <p id="platform-indicator">全平台兼容版本</p>
-    </div>
-    
-    <!-- iOS AR Section -->
-    <div class="ios-ar-section">
-        <h2>📱 iOS 原生 AR</h2>
-        <p>使用 Apple AR Quick Look 技术</p>
+    <div class="container">
+        <div class="title">🏮 关公像 真实 AR</div>
         
+        <div id="device-status" class="status">
+            📱 检测设备中...
+        </div>
+        
+        <!-- iOS AR Button -->
         <a href="https://qiuziguo.github.io/3dmodel/einscan_pro_hd_statue_of_guan_gong/model.usdz" 
            rel="ar" 
            class="ar-button"
-           id="usdz-button">
-            🚀 启动 iOS AR 体验
+           id="ar-button">
+            🚀 在真实空间中放置关公像
         </a>
         
-        <div class="platform-info ios-only">
-            <h3>✅ iOS 设备检测成功</h3>
-            <p>• 点击上方按钮即可体验原生 AR</p>
-            <p>• 支持表面检测和手势控制</p>
-            <p>• 无需额外应用，Safari 直接打开</p>
+        <div class="requirements">
+            <h3>📋 系统要求：</h3>
+            <ul>
+                <li>🍎 <strong>iOS 12+</strong> (iPhone 6s/iPad 2017+)</li>
+                <li>🌐 <strong>Safari 浏览器</strong></li>
+                <li>📷 <strong>后置摄像头</strong></li>
+                <li>🔒 <strong>HTTPS 网站</strong> (已满足)</li>
+            </ul>
         </div>
         
-        <div class="platform-info non-ios">
-            <h3>📱 针对您的设备</h3>
-            <p id="device-message">检测设备类型中...</p>
-        </div>
-    </div>
-    
-    <!-- Fallback 3D Viewer -->
-    <div class="fallback-section">
-        <h2 style="text-align: center; margin: 20px;">🔄 3D 交互查看器</h2>
-        
-        <model-viewer
-            id="guan-gong-viewer"
-            src="https://qiuziguo.github.io/3dmodel/einscan_pro_hd_statue_of_guan_gong/scene.gltf"
-            alt="关公像 3D 模型"
-            auto-rotate
-            auto-rotate-delay="3000"
-            rotation-per-second="20deg"
-            camera-controls
-            touch-action="pan-y"
-            disable-zoom="false"
-            environment-image="neutral"
-            shadow-intensity="1"
-            camera-orbit="0deg 75deg 2.5m"
-            field-of-view="30deg"
-            loading="eager">
+        <div class="steps">
+            <h3>📱 AR 使用步骤：</h3>
             
-            <div slot="progress-bar" style="
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                color: white;
-                font-size: 18px;
-            ">
-                加载中... ⏳
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <div class="step-title">点击 AR 按钮</div>
+                    <div>点击上方"在真实空间中放置关公像"按钮</div>
+                </div>
             </div>
-        </model-viewer>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <div class="step-title">允许相机权限</div>
+                    <div>系统会请求相机权限，点击"允许"</div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <div class="step-title">扫描表面</div>
+                    <div>慢慢移动设备，让相机识别桌面、地板等平面</div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <div class="step-title">放置模型</div>
+                    <div>在检测到的平面上点击，关公像就会出现在真实空间中</div>
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <div class="step-title">调整位置</div>
+                    <div>用手指拖拽移动，双指缩放大小，享受 AR 体验</div>
+                </div>
+            </div>
+        </div>
         
-        <div style="text-align: center; padding: 20px; background: rgba(0,0,0,0.3); margin: 0 20px; border-radius: 10px;">
-            <p><strong>3D 查看器功能：</strong></p>
-            <p>🔄 拖拽旋转 • 📏 双指缩放 • ⏯️ 自动旋转</p>
+        <div class="troubleshoot">
+            <h3>🔧 如果 AR 不工作：</h3>
+            <ul>
+                <li>确保使用 <strong>Safari 浏览器</strong>（不是微信内置浏览器）</li>
+                <li>检查 iOS 版本是否为 <strong>12.0 或更高</strong></li>
+                <li>确保 <strong>USDZ 文件</strong> 已正确上传到 GitHub</li>
+                <li>重启 Safari 并重新尝试</li>
+                <li>确保有足够的光线让相机识别表面</li>
+            </ul>
+        </div>
+        
+        <!-- Alternative for non-iOS -->
+        <div id="alternative-section" style="display: none;">
+            <div class="troubleshoot">
+                <h3>🤖 Android/桌面设备：</h3>
+                <p>对于非 iOS 设备，请使用：</p>
+                <ul>
+                    <li><strong>Android:</strong> 访问 WebXR 版本</li>
+                    <li><strong>桌面:</strong> 使用 3D 查看器</li>
+                </ul>
+                <a href="./index.html" style="color: #4CAF50; font-weight: bold;">
+                    🔗 访问 WebXR 版本
+                </a>
+            </div>
         </div>
     </div>
 
@@ -171,8 +230,12 @@
             return /iPad|iPhone|iPod/.test(navigator.userAgent);
         }
         
-        function isAndroid() {
-            return /Android/.test(navigator.userAgent);
+        function getIOSVersion() {
+            const match = navigator.userAgent.match(/OS (\d+)_(\d+)_?(\d+)?/);
+            if (match) {
+                return parseInt(match[1]);
+            }
+            return 0;
         }
         
         function supportsARQuickLook() {
@@ -180,70 +243,76 @@
             return a.relList && a.relList.supports && a.relList.supports('ar');
         }
         
-        function supportsWebXR() {
-            return 'xr' in navigator;
+        function isSafari() {
+            return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
         }
         
-        // Update UI based on device
-        function updateDeviceUI() {
-            const platformIndicator = document.getElementById('platform-indicator');
-            const deviceMessage = document.getElementById('device-message');
-            const iosOnlyElements = document.querySelectorAll('.ios-only');
-            const nonIosElements = document.querySelectorAll('.non-ios');
+        function isInApp() {
+            // Detect if running in WeChat, Line, or other in-app browsers
+            return /MicroMessenger|Line|FBAN|FBAV/.test(navigator.userAgent);
+        }
+        
+        // Update status based on device capabilities
+        function updateStatus() {
+            const statusEl = document.getElementById('device-status');
+            const alternativeEl = document.getElementById('alternative-section');
+            const arButton = document.getElementById('ar-button');
             
             if (isIOS()) {
-                platformIndicator.textContent = 'iOS 设备 - 原生 AR 支持';
-                iosOnlyElements.forEach(el => el.style.display = 'block');
-                nonIosElements.forEach(el => el.style.display = 'none');
+                const iosVersion = getIOSVersion();
+                const hasARSupport = supportsARQuickLook();
+                const isUsingSafari = isSafari();
+                const inAppBrowser = isInApp();
                 
-                if (supportsARQuickLook()) {
-                    deviceMessage.innerHTML = '✅ 支持 iOS AR Quick Look<br>点击上方按钮体验原生 AR';
+                if (inAppBrowser) {
+                    statusEl.className = 'status not-supported';
+                    statusEl.innerHTML = '⚠️ 请在 Safari 浏览器中打开<br>当前在应用内浏览器，不支持 AR';
+                } else if (iosVersion >= 12 && hasARSupport && isUsingSafari) {
+                    statusEl.className = 'status supported';
+                    statusEl.innerHTML = '✅ iOS AR 支持已启用<br>点击下方按钮体验真实 AR';
+                } else if (iosVersion < 12) {
+                    statusEl.className = 'status not-supported';
+                    statusEl.innerHTML = `⚠️ iOS 版本太低 (${iosVersion})<br>需要 iOS 12+ 支持 AR`;
+                } else if (!isUsingSafari) {
+                    statusEl.className = 'status not-supported';
+                    statusEl.innerHTML = '⚠️ 请使用 Safari 浏览器<br>其他浏览器不支持 AR Quick Look';
                 } else {
-                    deviceMessage.innerHTML = '⚠️ 需要 iOS 12+ 和 Safari 浏览器';
+                    statusEl.className = 'status not-supported';
+                    statusEl.innerHTML = '⚠️ AR Quick Look 不可用<br>请检查系统设置';
                 }
-            } else if (isAndroid()) {
-                platformIndicator.textContent = 'Android 设备';
-                deviceMessage.innerHTML = isAndroid() && supportsWebXR() ? 
-                    '🤖 Android 设备检测到<br>🎯 <a href="./index.html" style="color: #4CAF50;">点击这里体验 WebXR AR</a>' :
-                    '🤖 Android 设备检测到<br>📱 使用下方 3D 查看器或尝试 Chrome 浏览器的 WebXR 功能';
             } else {
-                platformIndicator.textContent = '桌面设备';
-                deviceMessage.innerHTML = '💻 桌面设备检测到<br>📱 使用下方 3D 查看器查看模型';
+                statusEl.className = 'status not-supported';
+                statusEl.innerHTML = '📱 非 iOS 设备<br>请使用下方替代方案';
+                alternativeEl.style.display = 'block';
             }
         }
         
-        // Handle USDZ button click
-        document.getElementById('usdz-button').addEventListener('click', function(e) {
+        // Handle AR button click
+        document.getElementById('ar-button').addEventListener('click', function(e) {
             if (!isIOS()) {
                 e.preventDefault();
-                if (isAndroid()) {
-                    alert('Android 设备请使用下方的 3D 查看器，或访问 WebXR 版本体验 AR');
-                } else {
-                    alert('此 AR 功能需要在 iOS 设备（iPhone/iPad）上使用');
-                }
+                alert('真实 AR 功能需要在 iOS 设备上使用\n\nAndroid 用户请使用 WebXR 版本');
+                return;
+            }
+            
+            if (isInApp()) {
+                e.preventDefault();
+                alert('请在 Safari 浏览器中打开此页面\n\n应用内浏览器不支持 AR 功能');
                 return;
             }
             
             if (!supportsARQuickLook()) {
                 e.preventDefault();
-                alert('需要 iOS 12+ 和 Safari 浏览器支持 AR Quick Look');
+                alert('您的设备不支持 AR Quick Look\n\n需要 iOS 12+ 和 Safari 浏览器');
                 return;
             }
+            
+            // If all checks pass, let the link work normally
+            console.log('Launching AR Quick Look...');
         });
         
-        // Initialize
-        window.addEventListener('load', updateDeviceUI);
-        
-        // Model viewer events
-        const modelViewer = document.querySelector('#guan-gong-viewer');
-        
-        modelViewer.addEventListener('load', () => {
-            console.log('3D 模型加载成功');
-        });
-        
-        modelViewer.addEventListener('error', (error) => {
-            console.error('模型加载失败:', error);
-        });
+        // Initialize on page load
+        window.addEventListener('load', updateStatus);
     </script>
 </body>
 </html>
