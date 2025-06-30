@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>关公像 WebXR</title>
+    <!-- Three.js -->
+    <script src="https://unpkg.com/three@0.126.0/build/three.js"></script>
+    <script src="https://unpkg.com/three@0.126.0/examples/js/loaders/GLTFLoader.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏮 关公像 AR 体验</h1>
+        <p>在您的桌面上放置一尊威武的关公像</p>
+        <button onclick="activateXR()">开始 AR 体验</button>
+        
+        <div class="info">
+            <h3>使用说明：</h3>
+            <p>• 点击按钮启动 AR</p>
+            <p>• 将手机对准桌面或平面</p>
+            <p>• 点击屏幕放置关公像</p>
+            <p>• 可以多次点击放置多个雕像</p>
+            
+            <h3>📁 模型设置：</h3>
+            <p style="font-size: 12px; color: #ffeb3b;">
+                ✅ 已配置 EinScan Pro HD 关公像模型<br>
+                📍 来源：SHINING 3D (Sketchfab)<br>
+                🔗 GitHub: qiuziguo/3dmodel<br><br>
+                <strong>重要：需要启用 GitHub Pages</strong><br>
+                1. 前往您的 GitHub 仓库设置<br>
+                2. 滚动到 "Pages" 部分<br>
+                3. 选择 "Deploy from a branch"<br>
+                4. 选择 "main" 分支<br>
+                5. 点击 "Save"
+            </p>
+        </div>
+    </div>
+
+    <script>
+        async function activateXR() {
+            // Check if WebXR is supported
+            if (!navigator.xr) {
+                alert('此设备不支持 WebXR');
+                return;
+            }
+
+            try {
+                // Add canvas and initialize WebGL context
+                const canvas = document.createElement("canvas");
+                document.body.appendChild(canvas);
+                const gl = canvas.getContext("webgl", {xrCompatible: true});
+
+                // Create scene with proper lighting for the statue
+                const scene = new THREE.Scene();
+                
+                // Add multiple lights to properly illuminate the Guan Gong statue
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(5, 10, 5);
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+                
+                // Add a warm light to enhance the golden appearance
+                const pointLight = new THREE.PointLight(0xffd700, 0.5, 10);
+                pointLight.position.set(-3, 5, 3);
+                scene.add(pointLight);
+
+                // Set up renderer
+                const renderer = new THREE.WebGLRenderer({
+                    alpha: true,
+                    preserveDrawingBuffer: true,
+                    canvas: canvas,
+                    context: gl
+                });
+                renderer.autoClear = false;
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+                // Set up camera
+                const camera = new THREE.PerspectiveCamera();
+                camera.matrixAutoUpdate = false;
+
+                // Initialize WebXR session with hit-test feature
+                const session = await navigator.xr.requestSession("immersive-ar", {
+                    requiredFeatures: ['hit-test']
+                });
+                
+                session.updateRenderState({
+                    baseLayer: new XRWebGLLayer(session, gl)
+                });
+
+                // Create reference spaces
+                const referenceSpace = await session.requestReferenceSpace('local');
+                const viewerSpace = await session.requestReferenceSpace('viewer');
+                const hitTestSource = await session.requestHitTestSource({ space: viewerSpace });
+
+                // Load 3D models
+                const loader = new THREE.GLTFLoader();
+                let reticle;
+                let guanGongStatue;
+
+                // Load targeting reticle
+                loader.load("https://immersive-web.github.io/webxr-samples/media/gltf/reticle/reticle.gltf", function(gltf) {
+                    reticle = gltf.scene;
+                    reticle.visible = false;
+                    scene.add(reticle);
+                });
+
+                // Load the Guan Gong model from Sketchfab
+                // Replace 'YOUR_HOSTED_MODEL_URL' with the actual URL of your hosted GLTF file
+                let guanGongModel = null;
+                
+                // Load from your GitHub repository
+                // Note: You need to enable GitHub Pages for this to work properly
+                const modelUrl = 'https://qiuziguo.github.io/3dmodel/einscan_pro_hd_statue_of_guan_gong/scene.gltf';
+                
+                loader.load(modelUrl, function(gltf) {
+                    guanGongModel = gltf.scene;
+                    
+                    // Scale the model to appropriate size for desktop AR
+                    const box = new THREE.Box3().setFromObject(guanGongModel);
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDimension = Math.max(size.x, size.y, size.z);
+                    const desiredSize = 0.15; // Adjust this value for desired size
+                    const scale = desiredSize / maxDimension;
+                    guanGongModel.scale.set(scale, scale, scale);
+                    
+                    // Center the model
+                    const center = box.getCenter(new THREE.Vector3());
+                    guanGongModel.position.sub(center.multiplyScalar(scale));
+                    
+                    // Ensure the model sits on the surface (adjust Y position)
+                    const minY = box.min.y * scale;
+                    guanGongModel.position.y -= minY;
+                    
+                    console.log('Guan Gong model loaded successfully!');
+                }, function(progress) {
+                    console.log('Loading progress:', (progress.loaded / progress.total * 100) + '%');
+                }, function(error) {
+                    console.error('Error loading Guan Gong model:', error);
+                    // Fallback to a simple placeholder
+                    guanGongModel = createFallbackStatue();
+                });
+                
+                // Fallback function if the Sketchfab model fails to load
+                const createFallbackStatue = () => {
+                    const group = new THREE.Group();
+                    const geometry = new THREE.CylinderGeometry(0.03, 0.05, 0.15, 8);
+                    const material = new THREE.MeshPhongMaterial({ color: 0xDAA520 });
+                    const mesh = new THREE.Mesh(geometry, material);
+                    mesh.position.y = 0.075;
+                    group.add(mesh);
+                    
+                    // Add a simple head
+                    const headGeometry = new THREE.SphereGeometry(0.02, 8, 6);
+                    const head = new THREE.Mesh(headGeometry, material);
+                    head.position.y = 0.17;
+                    group.add(head);
+                    
+                    return group;
+                };
+
+                // Initialize as fallback until model loads
+                guanGongStatue = createFallbackStatue();
+
+                // Handle tap events to place statues
+                session.addEventListener("select", (event) => {
+                    if (reticle && reticle.visible && guanGongModel) {
+                        const statueClone = guanGongModel.clone();
+                        statueClone.position.copy(reticle.position);
+                        // Add slight random rotation for variety
+                        statueClone.rotation.y = Math.random() * Math.PI * 2;
+                        scene.add(statueClone);
+                        
+                        // Add a subtle scale-up animation
+                        const originalScale = statueClone.scale.clone();
+                        statueClone.scale.set(0, 0, 0);
+                        
+                        const animate = () => {
+                            if (statueClone.scale.x < originalScale.x) {
+                                statueClone.scale.addScalar(0.02);
+                                requestAnimationFrame(animate);
+                            }
+                        };
+                        animate();
+                    }
+                });
+
+                // Main render loop
+                const onXRFrame = (time, frame) => {
+                    session.requestAnimationFrame(onXRFrame);
+                    
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, session.renderState.baseLayer.framebuffer);
+                    
+                    const pose = frame.getViewerPose(referenceSpace);
+                    if (pose) {
+                        const view = pose.views[0];
+                        const viewport = session.renderState.baseLayer.getViewport(view);
+                        renderer.setSize(viewport.width, viewport.height);
+                        
+                        camera.matrix.fromArray(view.transform.matrix);
+                        camera.projectionMatrix.fromArray(view.projectionMatrix);
+                        camera.updateMatrixWorld(true);
+                        
+                        // Handle hit testing for reticle positioning
+                        const hitTestResults = frame.getHitTestResults(hitTestSource);
+                        if (hitTestResults.length > 0 && reticle) {
+                            const hitPose = hitTestResults[0].getPose(referenceSpace);
+                            reticle.visible = true;
+                            reticle.position.set(
+                                hitPose.transform.position.x, 
+                                hitPose.transform.position.y, 
+                                hitPose.transform.position.z
+                            );
+                            reticle.updateMatrixWorld(true);
+                        } else if (reticle) {
+                            reticle.visible = false;
+                        }
+                        
+                        renderer.render(scene, camera);
+                    }
+                };
+                
+                session.requestAnimationFrame(onXRFrame);
+                
+            } catch (error) {
+                console.error('WebXR initialization failed:', error);
+                alert('启动 AR 失败: ' + error.message + '\n请确保您使用的是支持 WebXR 的浏览器和设备');
+            }
+        }
+    </script>
+</body>
+</html>
